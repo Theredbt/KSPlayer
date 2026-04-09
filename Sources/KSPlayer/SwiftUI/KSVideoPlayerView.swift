@@ -30,6 +30,8 @@ public struct KSVideoPlayerView: View {
     private var isDropdownShow = false
     @State
     private var showVideoSetting = false
+    /// Optional callback for a Chromecast/Cast button. If provided, a cast button appears in the toolbar.
+    public var onCastTapped: (() -> Void)?
     @State
     public var url: URL {
         didSet {
@@ -225,7 +227,7 @@ public struct KSVideoPlayerView: View {
 
     private func controllerView(playerWidth: Double) -> some View {
         VStack {
-            VideoControllerView(config: playerCoordinator, subtitleModel: playerCoordinator.subtitleModel, title: $title, volumeSliderSize: playerWidth / 4)
+            VideoControllerView(config: playerCoordinator, subtitleModel: playerCoordinator.subtitleModel, title: $title, volumeSliderSize: playerWidth / 4, onCastTapped: onCastTapped)
             #if !os(xrOS)
             // 设置opacity为0，还是会去更新View。所以只能这样了
             if playerCoordinator.isMaskShow {
@@ -358,6 +360,7 @@ struct VideoControllerView: View {
     @Binding
     fileprivate var title: String
     fileprivate var volumeSliderSize: Double?
+    fileprivate var onCastTapped: (() -> Void)?
     @State
     private var showVideoSetting = false
     @Environment(\.dismiss)
@@ -412,6 +415,13 @@ struct VideoControllerView: View {
                 #if !os(tvOS)
                 if config.playerLayer?.player.allowsExternalPlayback == true {
                     AirPlayView().fixedSize()
+                }
+                if let castAction = onCastTapped {
+                    Button {
+                        castAction()
+                    } label: {
+                        Image(systemName: "tv")
+                    }
                 }
                 #endif
                 #endif
